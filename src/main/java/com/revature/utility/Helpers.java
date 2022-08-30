@@ -4,6 +4,7 @@ import com.revature.exception.InvalidParameterException;
 import com.revature.model.Account;
 import com.revature.model.Transaction;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -51,7 +52,8 @@ public class Helpers {
         InvalidParameterException exceptions = new InvalidParameterException();
         long n = 0L;
         try {
-            n = Long.parseLong(s);
+            BigDecimal amt = BigDecimal.valueOf(Double.parseDouble(s)).movePointRight(2).divideToIntegralValue(BigDecimal.valueOf(1));
+            n = (long) (int) (Float.parseFloat(amt.toString()) * 10) / 10;
             if (n < 1) {
                 exceptions.addMessage(val + " must be a non-zero positive number.");
             }
@@ -68,6 +70,8 @@ public class Helpers {
     public static Transaction validateTransactionParams(Map<String, String> trx) throws InvalidParameterException {
 
         Transaction t = new Transaction();
+        String initiatedBy = trx.get("initiatedBy");
+        if (initiatedBy != null) t.setInitiatedBy(initiatedBy);
         String requesterId = trx.get("requesterId");
         if (requesterId != null) t.setRequesterId(validatePositiveInt(requesterId, "User ID"));
         String transactionId = trx.get("transactionId");
@@ -85,6 +89,7 @@ public class Helpers {
         if (trx.get("receivingEmail") != null)
             if (validateEmail(trx.get("receivingEmail"))) t.setReceivingEmail(trx.get("receivingEmail"));
         return t;
+
     }
 
 

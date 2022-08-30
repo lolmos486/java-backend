@@ -58,13 +58,12 @@ public class Transaction {
         this.amount = amount;
     }
 
-    public Transaction(int requesterId, int sendingId, int receivingId, int descriptionId,
+    public Transaction(int requesterId, int sendingId, int receivingId,
                        String receivingEmail, long amount) {
 
         this.requesterId = requesterId;
         this.sendingId = sendingId;
         this.receivingId = receivingId;
-        this.descriptionId = descriptionId;
         this.receivingEmail = receivingEmail;
         this.amount = amount;
     }

@@ -18,7 +18,6 @@ public class User {
     private List<Account> accounts;
 
 
-
     public int getUserId() {
         return userId;
     }
@@ -90,6 +89,17 @@ public class User {
 
     public User() {
         this.firstName = "";
+        this.lastName = "";
+        this.email = "";
+        this.password = "";
+        this.phoneNumber = "";
+        this.userRole = "";
+        this.accounts = new ArrayList<>();
+
+    }
+
+    public User(String firstName) {
+        this.firstName = firstName;
         this.lastName = "";
         this.email = "";
         this.password = "";

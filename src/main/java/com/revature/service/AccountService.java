@@ -41,37 +41,49 @@ public class AccountService {
         } else {
             account.setTypeId(Integer.parseInt(typeId));
         }
-        String balance = newAccount.get("balance");
-
-        if (balance == null) {
-            exceptions.addMessage("Account balance must not be null");
-        } else {
-            try {
-                long accountBalance = Long.parseLong(balance);
-                if (accountBalance < 0) {
-                    exceptions.addMessage("Account balance must be positive.");
-                }
-                account.setBalance(accountBalance);
-            } catch (NumberFormatException e) {
-                exceptions.addMessage("Account balance " + balance + " is invalid. Please enter a valid numeric amount");
-            }
-
-        }
+        int balance = 0;
+        account.setBalance(balance);
 
         if (exceptions.containsMessage()) {
             throw exceptions;
         }
-        System.out.println(account);
+//        System.out.println(account);
         return accountDao.openAccount(account);
     }
 
-    public List<Account> getAccountsByEmail(String email) throws SQLException {
-        return accountDao.getAccountsByEmail(email);
+    public List<Account> getAccountsByEmail(String email) throws SQLException, InvalidParameterException {
+        InvalidParameterException exceptions = new InvalidParameterException();
+
+        if(userService.getUserEmailByEmail(email)) {
+            return accountDao.getAccountsByEmail(email);
+        }
+        else {
+            exceptions.addMessage("User under email was not found");
+            throw exceptions;
+        }
     }
 
-    public Account getAccountByEmailAndAccountId(String email, int id) {
-        return accountDao.getAccountByEmailAndAccountId(email, id);
+    public Account getAccountByEmailAndAccountId(String email, int id) throws InvalidParameterException, SQLException {
+        InvalidParameterException exceptions = new InvalidParameterException();
+        List<Account> accountList = getAccountsByEmail(email);
+        boolean isIn = false;
+        if (accountList != null) {
+            for (Account account : accountList) {
+                if (id == (account.getAccountId())) {
+                    isIn = true;
+                }
+            }
+        }
+        if(isIn) {
+            return accountDao.getAccountByEmailAndAccountId(email, id);
+
+        }
+        else{
+            exceptions.addMessage("The account was not found");
+            throw exceptions;
+        }
     }
+
 
     public String linkUserToAccount(int aId, String email) throws SQLException, InvalidParameterException {
         System.out.println(email);
@@ -86,7 +98,9 @@ public class AccountService {
             if (owners.contains(fullName)) {
                 exceptions.addMessage("User " + myUser.getUserId() + " already linked to account " + aId);
             }
-
+        }
+        if (!accountDao.getAccountById(aId)){
+            exceptions.addMessage("The account does not exist");
         }
         if (exceptions.containsMessage()) {
             throw exceptions;
@@ -129,8 +143,14 @@ public class AccountService {
     }
 
     public List<String> obtainListOfAccountOwners(int aId) throws SQLException {
-        return accountDao.obtainListOfAccountOwners(aId);
-    }
+//        InvalidParameterException exception = new InvalidParameterException();
+            accountDao.getAccountById(aId);
+//        if(accountDao.getAccountById(aId)) {
+            return accountDao.obtainListOfAccountOwners(aId);
+        }
 
+    public Boolean isOwnerOfAccount(int uId, int aId) {
+        return accountDao.isOwnerOfAccount(uId, aId);
+    }
 }
 

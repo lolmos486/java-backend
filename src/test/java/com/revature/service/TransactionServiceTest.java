@@ -2,8 +2,10 @@ package com.revature.service;
 
 import com.revature.dao.AccountDao;
 import com.revature.dao.TransactionDao;
+import com.revature.dao.UserDao;
 import com.revature.exception.InvalidParameterException;
 import com.revature.model.Transaction;
+import com.revature.model.User;
 import com.revature.utility.Helpers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -24,24 +26,31 @@ public class TransactionServiceTest {
         // Arrange
         TransactionDao mockedObject = mock(TransactionDao.class);
         AccountDao mockedObject2 = mock(AccountDao.class);
-        TransactionService transactionService = new TransactionService(mockedObject, mockedObject2);
+        UserService mockedObject3 = mock(UserService.class);
+        User mockedObject4 = mock(User.class);
 
-        Transaction t = new Transaction(1, 1, 2, 1, "jd80@a,ca", 50);
+        TransactionService transactionService = new TransactionService(mockedObject, mockedObject2, mockedObject3);
+
+        Transaction t = new Transaction();
         t.setReceivingEmail("jd80@a.ca");
+        t.setAmount(5000);
+        t.setRequesterId(1);
+        t.setReceivingId(2);
+        t.setSendingId(1);
         Map<String, String> trx = new HashMap<>();
         trx.put("requesterId", "1");
         trx.put("sendingId", "1");
         trx.put("receivingId", "2");
-        trx.put("descriptionId", "1");
         trx.put("amount", "50");
         trx.put("receivingEmail", "jd80@a.ca");
 
-        when(mockedObject.moveAmountBetweenAccounts(t)).thenReturn("Transaction Successful");
+        when(mockedObject.transferBetweenAccounts(t)).thenReturn("Transaction Successful");
         when(mockedObject2.isOwnerOfAccount(1, 1)).thenReturn(true);
-        when(mockedObject2.isOwnerOfAccount(1, 2)).thenReturn(true);
-        when(mockedObject2.canWithdraw(1, 50)).thenReturn(true);
+        when(mockedObject2.getBalanceofAccountById(1)).thenReturn(5000000);
+        when(mockedObject4.getFirstName()).thenReturn("John");
+        when(mockedObject3.getUserByUserId(1)).thenReturn(new User("John"));
 
-        String actual = transactionService.moveAmountBetweenAccounts(trx);
+        String actual = (String) transactionService.transferBetweenAccounts(trx, 1);
 
         String expected = "Transaction Successful";
 
@@ -56,24 +65,21 @@ public class TransactionServiceTest {
         AccountDao mockedObject2 = mock(AccountDao.class);
         TransactionService transactionService = new TransactionService(mockedObject, mockedObject2);
 
-        Transaction t = new Transaction(1, 1, 2, 1, "jd80@a,ca", 5000);
+        Transaction t = new Transaction(1, 1, 2, "jd80@a,ca", 5000);
         t.setReceivingEmail("jd80@a.ca");
         Map<String, String> trx = new HashMap<>();
         trx.put("requesterId", "abc");
         trx.put("sendingId", "1");
         trx.put("receivingId", "2");
-        trx.put("descriptionId", "1");
         trx.put("amount", "5000");
         trx.put("receivingEmail", "jd80@a.ca");
 
         List<String> mockReturn = new ArrayList<>();
         mockReturn.add("User ID <" + trx.get("requesterId") + "> is an invalid value. Numeric value is expected.");
         when(mockedObject2.isOwnerOfAccount(1, 1)).thenReturn(true);
-        when(mockedObject2.isOwnerOfAccount(1, 2)).thenReturn(true);
-        when(mockedObject2.canWithdraw(1, 5000)).thenReturn(true);
 
         try {
-            transactionService.moveAmountBetweenAccounts(trx);
+            transactionService.transferBetweenAccounts(trx, 1);
             fail();
         } catch (InvalidParameterException e) {
             // Act
@@ -91,24 +97,21 @@ public class TransactionServiceTest {
         AccountDao mockedObject2 = mock(AccountDao.class);
         TransactionService transactionService = new TransactionService(mockedObject, mockedObject2);
 
-        Transaction t = new Transaction(1, 1, 2, 1, "jd80@a,ca", 5000);
+        Transaction t = new Transaction(1, 1, 2, "jd80@a,ca", 5000);
         t.setReceivingEmail("jd80@a.ca");
         Map<String, String> trx = new HashMap<>();
         trx.put("requesterId", "-1");
         trx.put("sendingId", "1");
         trx.put("receivingId", "2");
-        trx.put("descriptionId", "1");
         trx.put("amount", "5000");
         trx.put("receivingEmail", "jd80@a.ca");
 
         List<String> mockReturn = new ArrayList<>();
         mockReturn.add("User ID must be a non-zero positive number.");
         when(mockedObject2.isOwnerOfAccount(1, 1)).thenReturn(true);
-        when(mockedObject2.isOwnerOfAccount(1, 2)).thenReturn(true);
-        when(mockedObject2.canWithdraw(1, 5000)).thenReturn(true);
 
         try {
-            transactionService.moveAmountBetweenAccounts(trx);
+            transactionService.transferBetweenAccounts(trx, 1);
             fail();
         } catch (InvalidParameterException e) {
             // Act
@@ -126,25 +129,22 @@ public class TransactionServiceTest {
         AccountDao mockedObject2 = mock(AccountDao.class);
         TransactionService transactionService = new TransactionService(mockedObject, mockedObject2);
 
-        Transaction t = new Transaction(1, 1, 2, 1,
+        Transaction t = new Transaction(1, 1, 2,
                 "jd80@a,ca", 5000);
         t.setReceivingEmail("jd80@a.ca");
         Map<String, String> trx = new HashMap<>();
         trx.put("requesterId", "0");
         trx.put("sendingId", "1");
         trx.put("receivingId", "2");
-        trx.put("descriptionId", "1");
         trx.put("amount", "5000");
         trx.put("receivingEmail", "jd80@a.ca");
 
         List<String> mockReturn = new ArrayList<>();
         mockReturn.add("User ID must be a non-zero positive number.");
         when(mockedObject2.isOwnerOfAccount(1, 1)).thenReturn(true);
-        when(mockedObject2.isOwnerOfAccount(1, 2)).thenReturn(true);
-        when(mockedObject2.canWithdraw(1, 5000)).thenReturn(true);
 
         try {
-            transactionService.moveAmountBetweenAccounts(trx);
+            transactionService.transferBetweenAccounts(trx, 1);
             fail();
         } catch (InvalidParameterException e) {
             // Act
@@ -162,14 +162,13 @@ public class TransactionServiceTest {
         AccountDao mockedObject2 = mock(AccountDao.class);
         TransactionService transactionService = new TransactionService(mockedObject, mockedObject2);
 
-        Transaction t = new Transaction(1, 1, 2, 1,
+        Transaction t = new Transaction(1, 1, 2,
                 "jd80@a,ca", 5000);
         t.setReceivingEmail("jd80@a.ca");
         Map<String, String> trx = new HashMap<>();
         trx.put("requesterId", "1");
         trx.put("sendingId", "1");
         trx.put("receivingId", "2");
-        trx.put("descriptionId", "1");
         trx.put("amount", "../");
         trx.put("receivingEmail", "jd80@a.ca");
 
@@ -177,10 +176,9 @@ public class TransactionServiceTest {
         mockReturn.add("Transaction amount <" + trx.get("amount") + "> is an invalid value. Numeric value is expected.");
         when(mockedObject2.isOwnerOfAccount(1, 1)).thenReturn(true);
         when(mockedObject2.isOwnerOfAccount(1, 2)).thenReturn(true);
-        when(mockedObject2.canWithdraw(1, 5000)).thenReturn(true);
 
         try {
-            transactionService.moveAmountBetweenAccounts(trx);
+            transactionService.transferBetweenAccounts(trx, 1);
             fail();
         } catch (InvalidParameterException e) {
             // Act
@@ -198,14 +196,13 @@ public class TransactionServiceTest {
         AccountDao mockedObject2 = mock(AccountDao.class);
         TransactionService transactionService = new TransactionService(mockedObject, mockedObject2);
 
-        Transaction t = new Transaction(1, 1, 2, 1,
+        Transaction t = new Transaction(1, 1, 2,
                 "jd80@a,ca", 5000);
         t.setReceivingEmail("jd80@a.ca");
         Map<String, String> trx = new HashMap<>();
         trx.put("requesterId", "1");
         trx.put("sendingId", "1");
         trx.put("receivingId", "2");
-        trx.put("descriptionId", "1");
         trx.put("amount", "-1");
         trx.put("receivingEmail", "jd80@a.ca");
 
@@ -213,10 +210,9 @@ public class TransactionServiceTest {
         mockReturn.add("Transaction amount must be a non-zero positive number.");
         when(mockedObject2.isOwnerOfAccount(1, 1)).thenReturn(true);
         when(mockedObject2.isOwnerOfAccount(1, 2)).thenReturn(true);
-        when(mockedObject2.canWithdraw(1, 5000)).thenReturn(true);
 
         try {
-            transactionService.moveAmountBetweenAccounts(trx);
+            transactionService.transferBetweenAccounts(trx, 1);
             fail();
         } catch (InvalidParameterException e) {
             // Act
@@ -235,25 +231,22 @@ public class TransactionServiceTest {
         AccountDao mockedObject2 = mock(AccountDao.class);
         TransactionService transactionService = new TransactionService(mockedObject, mockedObject2);
 
-        Transaction t = new Transaction(1, 1, 2, 1,
+        Transaction t = new Transaction(1, 1, 2,
                 "jd80@a,ca", 5000);
         t.setReceivingEmail("jd80@a.ca");
         Map<String, String> trx = new HashMap<>();
         trx.put("requesterId", "1");
         trx.put("sendingId", "1");
         trx.put("receivingId", "2");
-        trx.put("descriptionId", "1");
         trx.put("amount", "0");
         trx.put("receivingEmail", "jd80@a.ca");
 
         List<String> mockReturn = new ArrayList<>();
         mockReturn.add("Transaction amount must be a non-zero positive number.");
         when(mockedObject2.isOwnerOfAccount(1, 1)).thenReturn(true);
-        when(mockedObject2.isOwnerOfAccount(1, 2)).thenReturn(true);
-        when(mockedObject2.canWithdraw(1, 5000)).thenReturn(true);
 
         try {
-            transactionService.moveAmountBetweenAccounts(trx);
+            transactionService.transferBetweenAccounts(trx, 1);
             fail();
         } catch (InvalidParameterException e) {
             // Act
@@ -271,25 +264,22 @@ public class TransactionServiceTest {
         AccountDao mockedObject2 = mock(AccountDao.class);
         TransactionService transactionService = new TransactionService(mockedObject, mockedObject2);
 
-        Transaction t = new Transaction(1, 1, 2, 1,
+        Transaction t = new Transaction(1, 1, 2,
                 "jd80@a,ca", 5000);
         t.setReceivingEmail("jd80@a.ca");
         Map<String, String> trx = new HashMap<>();
         trx.put("requesterId", "1");
         trx.put("sendingId", "1");
         trx.put("receivingId", "2");
-        trx.put("descriptionId", "1");
         trx.put("amount", "5000");
         trx.put("receivingEmail", "");
 
         List<String> mockReturn = new ArrayList<>();
         mockReturn.add("Value for receivingEmail must exist.");
         when(mockedObject2.isOwnerOfAccount(1, 1)).thenReturn(true);
-        when(mockedObject2.isOwnerOfAccount(1, 2)).thenReturn(true);
-        when(mockedObject2.canWithdraw(1, 5000)).thenReturn(true);
 
         try {
-            transactionService.moveAmountBetweenAccounts(trx);
+            transactionService.transferBetweenAccounts(trx, 1);
             fail();
         } catch (InvalidParameterException e) {
             // Act
@@ -307,14 +297,13 @@ public class TransactionServiceTest {
         AccountDao mockedObject2 = mock(AccountDao.class);
         TransactionService transactionService = new TransactionService(mockedObject, mockedObject2);
 
-        Transaction t = new Transaction(1, 1, 2, 1,
+        Transaction t = new Transaction(1, 1, 2,
                 "jd80@a,ca", 5000);
         t.setReceivingEmail("jd80@a.ca");
         Map<String, String> trx = new HashMap<>();
         trx.put("requesterId", "1");
         trx.put("sendingId", "1");
         trx.put("receivingId", "2");
-        trx.put("descriptionId", "1");
         trx.put("amount", "5000");
         trx.put("receivingEmail", "----");
 
@@ -322,10 +311,9 @@ public class TransactionServiceTest {
         mockReturn.add("Value for receivingEmail does not match <username>@<domain> pattern");
         when(mockedObject2.isOwnerOfAccount(1, 1)).thenReturn(true);
         when(mockedObject2.isOwnerOfAccount(1, 2)).thenReturn(true);
-        when(mockedObject2.canWithdraw(1, 5000)).thenReturn(true);
 
         try {
-            transactionService.moveAmountBetweenAccounts(trx);
+            transactionService.transferBetweenAccounts(trx, 1);
             fail();
         } catch (InvalidParameterException e) {
             // Act
@@ -419,7 +407,7 @@ public class TransactionServiceTest {
     }
 
     @Test
-    public void testGetAllTransactionsByStatusName() throws InvalidParameterException, SQLException {
+    public void getAllOutgoingTransactionsByStatusName() throws InvalidParameterException, SQLException {
         // Arrange
         TransactionDao mockedObject = mock(TransactionDao.class);
         TransactionService transactionService = new TransactionService(mockedObject);
@@ -432,8 +420,8 @@ public class TransactionServiceTest {
         mockReturn.add(transaction1);
         mockReturn.add(transaction2);
 
-        when(mockedObject.getAllTransactionsByStatusName("PENDING")).thenReturn(trx);
-        transactionService.getAllTransactionsByStatusName("PENDING");
+        when(mockedObject.getAllOutgoingTransactionsByStatusName("PENDING", 1)).thenReturn(trx);
+        transactionService.getAllOutgoingTransactionsByStatusName("PENDING", 1);
         // Assert
         Assertions.assertEquals(trx, mockReturn);
     }
@@ -456,8 +444,8 @@ public class TransactionServiceTest {
         mockReturn.add(transaction2);
         mockReturn.add(transaction3);
 
-        when(mockedObject.getAllTransactionsByStatusName("Income")).thenReturn(trx);
-        transactionService.getAllTransactionsByStatusName("Income");
+        when(mockedObject.getAllOutgoingTransactionsByStatusName("Income", 1)).thenReturn(trx);
+        transactionService.getAllOutgoingTransactionsByStatusName("Income", 1);
         // Assert
         Assertions.assertEquals(trx, mockReturn);
     }
