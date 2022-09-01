@@ -25,13 +25,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static junit.framework.Assert.assertTrue;
 
 public class UserService {
     private UserDao userDao;
+    private String firstName;
+    private String lastName;
+    private String email;
 
-    public void addUser(UserDao userDao, String firstName, String lastName, String email, String password, String phoneNumber) {
-        this.userDao = userDao;
-    }
+    private String password;
+    private String phoneNumber;
+    private String userRole;
+    private String regexPattern;
+    private UserService EmailValidation;
 
 
     public UserService(UserDao mockedObject) {
@@ -40,6 +49,84 @@ public class UserService {
 
     public UserService() {
         this.userDao = new UserDao();
+    }
+
+    public String addUser(Map<String, String> newUser) throws InvalidParameterException {
+        User user = new User();
+        InvalidParameterException exceptions = new InvalidParameterException();
+        if (newUser.get("firstName") == null) {
+            exceptions.addMessage("User must have a First Name");
+
+        }
+        if (newUser.get("lastName") == null) {
+            exceptions.addMessage("User must have a Last Name");
+        }
+        if (newUser.get("email") == null) {
+            exceptions.addMessage("User must have an email");
+
+
+        }
+        if (newUser.get("phoneNumber") == null) {
+            exceptions.addMessage("User must have a Phone Number");
+
+        }
+        if (newUser.get("password") == null) {
+            exceptions.addMessage("User must be assigned a Role");
+
+
+        }
+//          byte newpassword = isValidPassword(newUser.get("password"));
+
+        if (exceptions.containsMessage()) {
+            throw exceptions;
+        }
+        user.setFirstName(newUser.get("firstName"));
+        user.setLastName(newUser.get("lastName"));
+        user.setEmail(newUser.get("email"));
+        user.setPhoneNumber(newUser.get("phoneNumber"));
+        user.setPassword(newUser.get("password"));
+
+
+        return userDao.addUser(user);
+    }
+
+    //    public byte isValidPassword(String password)
+//    {
+//
+//        // Regex to check valid password.
+//        String regex = "^(?=.*[0-9])"
+//                + "(?=.*[a-z])(?=.*[A-Z])"
+//                + "(?=.*[@#$%^&+=])"
+//                + "(?=\\S+$).{8,20}$";
+//
+//        // Compile the ReGex
+//        Pattern p = Pattern.compile(regex);
+//
+//        // If the password is empty
+//        // return false
+//        if (password == null) {
+//            return false;
+//        }
+//
+//        // Pattern class contains matcher() method
+//        // to find matching between given password
+//        // and regular expression.
+//        Matcher m = p.matcher(password);
+//
+//        // Return if the password
+//        // matched the ReGex
+//        return m.matches();
+//    }
+    public static boolean patternMatches(String email, String regexPattern) {
+        return Pattern.compile(regexPattern)
+                .matcher(email)
+                .matches();
+    }
+
+    public void testUsingSimpleRegex() {
+        email = "username@domain.com";
+        regexPattern = "^(.+)@(\\S+)$";
+        assertTrue(patternMatches(email, regexPattern));
     }
 
     public boolean getUserEmailByEmail(String email) {
@@ -120,11 +207,11 @@ public class UserService {
         return userDao.getReceiverEmailByTransactionId(transactionId);
     }
 
-    public boolean resetPassword(String email, String newpassword){
+    public boolean resetPassword(String email, String newpassword) {
         //Check if email is valid
         boolean isEmail = userDao.getUserEmailByEmail(email);
 
-        if(isEmail) {
+        if (isEmail) {
             //Update password in Database and delete token
             boolean status = userDao.updatePassword(email, newpassword);
 
@@ -136,7 +223,7 @@ public class UserService {
                 throw new RuntimeException("OOPS something went wrong. Reset Link Expired");
                 // return user a message with invalid token
             }
-        }else{
+        } else {
             throw new RuntimeException("OOPS something went wrong. Reset Link Expired");
         }
     }
@@ -155,10 +242,10 @@ public class UserService {
 
                 //Send Token to Database
                 userDao.sendToken(jwtToken, currUser.getUserId());
-                Dotenv dotenv = Dotenv.load();
+//                Dotenv dotenv = Dotenv.load();
                 //Create URL and send email with reset URL
-                String frontendUrl = dotenv.get("FRONTEND_HOST");
-                String addressUrl =  frontendUrl +"/uservalues?token="+jwtToken;
+                String frontendUrl = System.getenv("FRONTEND_HOST");
+                String addressUrl = frontendUrl + "/uservalues?token=" + jwtToken;
 
                 int status = EmailUtility.email(inputEmail.getString("email"), "Reset your RevMo password", addressUrl);
                 if (status == 202) {
@@ -169,7 +256,7 @@ public class UserService {
             } else {
                 throw new RuntimeException("The email pertaining to the account has been sent an email. Please check email for reset link.");
             }
-       } catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("The email pertaining to the account has been sent an email. Please check email for reset link.");
         }
     }
@@ -201,7 +288,7 @@ public class UserService {
                         java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
 
                         if (desktop.isSupported(Desktop.Action.BROWSE)) {
-                            java.net.URI uri = new java.net.URI("http://localhost:5051/resetpassword.html");
+                            java.net.URI uri = new java.net.URI("http://ec2-54-210-81-82.compute-1.amazonaws.com/resetpassword.html");
                             desktop.browse(uri);
                         }
 
@@ -211,7 +298,7 @@ public class UserService {
                 }
             }
 
-        }catch(Exception e){
+        } catch (Exception e) {
             throw new RuntimeException("Reset Link Expired");
         }
     }
